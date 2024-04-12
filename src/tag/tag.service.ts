@@ -1,20 +1,18 @@
 import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import { TagEntity } from '@app/tag/tag.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class TagService {
-  tags: Array<string> = ['react', 'nestjs', 'angular', 'vue', 'svelte'];
-  findAll(): string[] {
-    return this.tags;
-  }
-  findOne(id: number): string {
-    const foundTag = this.tags.find((tag, index) => index === id - 1);
-    if (!foundTag) {
-      return 'Tag not found';
-    }
-    return foundTag;
-  }
-  create(createTag: string): string {
-    this.tags.push(createTag);
-    return createTag;
+  constructor(
+    @InjectRepository(TagEntity)
+    private readonly tagRepository: Repository<TagEntity>,
+  ) {}
+  async findAll(): Promise<{ tags: string[] }> {
+    const tags = await this.tagRepository.find();
+    return {
+      tags: tags.map((tag) => tag.name),
+    };
   }
 }
