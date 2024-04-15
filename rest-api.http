@@ -1,2 +1,16 @@
 
-GET http://localhost:3000/tags/
+GET http://localhost:3000/tags
+
+###
+
+POST http://localhost:3000/users
+Content-Type: application/json
+
+{ 
+ "user" :{
+    "email": "phyntom@gmail.com",
+    "username": "phyntom",
+    "password": "secret2300@#$%788"
+    }
+}
+
