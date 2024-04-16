@@ -2,7 +2,6 @@
 GET http://localhost:3000/tags
 
 ###
-
 POST http://localhost:3000/users
 Content-Type: application/json
 

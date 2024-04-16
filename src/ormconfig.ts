@@ -27,6 +27,5 @@ dataSource
   })
   .catch((error) => {
     console.error('Data Source initialization failed', error);
-    process.exit(1);
   });
 export default dataSource;

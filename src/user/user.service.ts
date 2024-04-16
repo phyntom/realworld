@@ -1,8 +1,10 @@
+import { UserEntity } from '@app/user/user.entity';
 import { Injectable } from '@nestjs/common';
 import { Repository } from 'typeorm';
-import { UserEntity } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from './dto/createUserDTO';
+import { UserResponseInterface } from './types/userResponse';
+import { sign } from 'jsonwebtoken';
 
 @Injectable()
 export class UserService {
@@ -11,12 +13,30 @@ export class UserService {
     private readonly userRepository: Repository<UserEntity>,
   ) {}
 
-  createUser(createUser: CreateUserDto) {
-    try {
-      this.userRepository.save(createUser);
-      return createUser;
-    } catch (error) {
-      throw new Error('Error creating user');
-    }
+  async createUser(
+    createUserDto: CreateUserDto,
+  ): Promise<UserResponseInterface> {
+    const newUser = new UserEntity();
+    Object.assign(newUser, createUserDto);
+    const createdUser = await this.userRepository.save(newUser);
+    return this.buildUserResponse(createdUser);
+  }
+  generateJwt(userEntity: UserEntity) {
+    return sign(
+      {
+        id: userEntity.id,
+        email: userEntity.email,
+      },
+      'secret',
+      { expiresIn: '24h' },
+    );
+  }
+  buildUserResponse(userEntity: UserEntity): UserResponseInterface {
+    return {
+      user: {
+        ...userEntity,
+        token: this.generateJwt(userEntity),
+      },
+    };
   }
 }
