@@ -8,3 +8,17 @@ Realword is project similar to medium with a lot of real world feature like scen
 This is done to demonstrate the use of Nestjs framework when building REST API
 
 ## Features
+
+### Authentication
+
+### Registration
+
+### Get Current User
+
+### Update User
+
+### Get Profile
+
+### Follow user
+
+### Unfollow User
