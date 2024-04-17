@@ -4,6 +4,7 @@ import {
   Get,
   Post,
   Req,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -13,6 +14,7 @@ import { UserResponseInterface } from './types/userResponse';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Request } from 'express';
 import { UserEntity } from './user.entity';
+import { AuthGuard } from '@app/guards/auth.guard';
 
 @Controller()
 export class UserController {
@@ -37,6 +39,7 @@ export class UserController {
   }
 
   @Get('user')
+  @UseGuards(AuthGuard)
   async currentUser(@Req() req: Request): Promise<UserResponseInterface> {
     const currentUser = <UserEntity>req['user'];
     return this.userService.buildUserResponse(currentUser);
