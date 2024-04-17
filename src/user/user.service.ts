@@ -2,17 +2,12 @@ import { UserEntity } from '@app/user/user.entity';
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from './dto/createUserDto';
+import { CreateUserDto } from '@app/user/dto/create-user.dto';
+import { LoginUserDto } from '@app/user/dto/login-user.dto';
 import { UserResponseInterface } from './types/userResponse';
-import { sign } from 'jsonwebtoken';
-import { ConfigService } from '@nestjs/config';
-import { config } from 'dotenv';
-import { LoginUserDto } from './dto/loginUserDto';
+import { JwtService } from '@nestjs/jwt';
 import { compare } from 'bcrypt';
-
-config();
-
-const configService = new ConfigService();
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UserService {
@@ -20,11 +15,17 @@ export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private jwtService: JwtService,
+
+    private readonly configService: ConfigService,
   ) {}
 
-  async createUser(
-    createUserDto: CreateUserDto,
-  ): Promise<UserResponseInterface> {
+  /**
+   * method to create a new user
+   * @param createUserDto
+   * @returns
+   */
+  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const userByEmail = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });
@@ -43,10 +44,17 @@ export class UserService {
     Object.assign(newUser, createUserDto);
     const createdUser = await this.userRepository.save(newUser);
     this.logger.log(`user : ${createdUser.email} created successfully`);
-    return this.buildUserResponse(createdUser);
+    // remove passord from the response
+    delete createdUser.password;
+    return createdUser;
   }
 
-  async login(loginUserDto: LoginUserDto) {
+  /**
+   * method to login a user
+   * @param loginUserDto
+   * @returns
+   */
+  async login(loginUserDto: LoginUserDto): Promise<UserEntity> {
     const { email, password } = loginUserDto;
 
     const userByEmail = await this.userRepository.findOne({
@@ -58,18 +66,42 @@ export class UserService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
     this.logger.log(`user : ${userByEmail.email} logged in successfully`);
-    return this.buildUserResponse(userByEmail);
+    // remove passord from the response
+    delete userByEmail.password;
+    return userByEmail;
   }
+
+  async findUserById(id: string): Promise<UserEntity> {
+    return this.userRepository.findOne({
+      where: { id },
+    });
+  }
+
+  /**
+   * method to generate jwt token
+   * @param userEntity
+   * @returns
+   */
   generateJwt(userEntity: UserEntity) {
-    return sign(
-      {
-        id: userEntity.id,
-        email: userEntity.email,
-      },
-      configService.get('JWT_SECRET'),
-      { expiresIn: '24h' },
-    );
+    const payload = {
+      id: userEntity.id,
+      username: userEntity.username,
+      email: userEntity.email,
+      bi: userEntity.bio,
+      image: userEntity.image,
+    };
+    const token = this.jwtService.sign(payload, {
+      secret: this.configService.get('JWT_SECRET'),
+      expiresIn: this.configService.get('JWT_EXPIRES_IN'),
+    });
+    return token;
   }
+
+  /**
+   * method to build user response
+   * @param userEntity
+   * @returns
+   */
   buildUserResponse(userEntity: UserEntity): UserResponseInterface {
     return {
       user: {
