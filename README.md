@@ -11,7 +11,38 @@ This is done to demonstrate the use of Nestjs framework when building REST API
 
 ### Authentication
 
+```
+POST /api/users/login
+```
+
+Request body
+
+```
+{
+  "user":{
+    "email": "jake@jake.jake",
+    "password": "jakejake"
+  }
+}
+```
+
 ### Registration
+
+```
+POST /api/users
+```
+
+Request body
+
+```
+{
+  "user":{
+    "username": "Jacob",
+    "email": "jake@jake.jake",
+    "password": "jakejake"
+  }
+}
+```
 
 ### Get Current User
 
